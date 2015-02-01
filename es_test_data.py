@@ -1,6 +1,3 @@
-from tornado.httpclient import HTTPClient, HTTPError, HTTPRequest
-from tornado.ioloop import IOLoop
-import tornado.options
 import json
 import time
 import logging
@@ -8,18 +5,21 @@ import random
 import string
 import uuid
 
+import tornado.httpclient
+import tornado.options
 
-http_client = HTTPClient()
+
+http_client = tornado.httpclient.HTTPClient()
 id_counter = 0
 
 
 def delete_index(idx_name):
     try:
         url = "%s/%s?refresh=true" % (tornado.options.options.es_url, idx_name)
-        request = HTTPRequest(url, method="DELETE", request_timeout=240)
+        request = tornado.httpclient.HTTPRequest(url, method="DELETE", request_timeout=240)
         response = http_client.fetch(request)
         logging.info('Deleting index  "%s" done   %s' % (idx_name, response.body))
-    except HTTPError:
+    except tornado.httpclient.HTTPError:
         pass
 
 
@@ -37,16 +37,16 @@ def create_index(idx_name):
     url = "%s/%s" % (tornado.options.options.es_url, idx_name)
     try:
         logging.info('Trying to create index %s' % (url))
-        request = HTTPRequest(url, method="PUT", body=body, request_timeout=240)
+        request = tornado.httpclient.HTTPRequest(url, method="PUT", body=body, request_timeout=240)
         response = http_client.fetch(request)
         logging.info('Creating index "%s" done   %s' % (idx_name, response.body))
-    except HTTPError:
+    except tornado.httpclient.HTTPError:
         pass
 
 
 def upload_batch(upload_data_txt):
 
-    request = HTTPRequest(tornado.options.options.es_url + "/_bulk", method="POST", body=upload_data_txt, request_timeout=240)
+    request = tornado.httpclient.HTTPRequest(tornado.options.options.es_url + "/_bulk", method="POST", body=upload_data_txt, request_timeout=240)
     response = http_client.fetch(request)
     result = json.loads(response.body)
 
@@ -225,4 +225,4 @@ if __name__ == '__main__':
 
     tornado.options.parse_command_line()
 
-    IOLoop.instance().run_sync(generate_test_data)
+    tornado.ioloop.IOLoop.instance().run_sync(generate_test_data)
