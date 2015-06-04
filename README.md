@@ -21,13 +21,24 @@ Python and [Tornado](https://github.com/tornadoweb/tornado/) are used, run `pip 
 It's as simple as this:
 
 ```
-$ python es_test_data.py
-[I 150126 22:26:44 es_test_data:40]  Trying to create index http://localhost:9200//test_data
-[I 150126 22:26:44 es_test_data:40]  Creating index "test_data" done   {"acknowledged":true}
-[I 150126 22:26:44 es_test_data:177] Generating 1000 docs, upload batch size is 500
-[I 150126 22:26:44 es_test_data:67]  Upload: OK - upload took:    26ms, total docs uploaded:     500
-[I 150126 22:26:44 es_test_data:67]  Upload: OK - upload took:    18ms, total docs uploaded:    1000
-[I 150126 22:26:44 es_test_data:201] Done - total count 1000, took 0 seconds
+$ python es_test_data.py --es_url=http://localhost:9200
+[I 150604 15:43:19 es_test_data:42] Trying to create index http://localhost:9200/test_data
+[I 150604 15:43:19 es_test_data:47] Guess the index exists already
+[I 150604 15:43:19 es_test_data:184] Generating 10000 docs, upload batch size is 1000
+[I 150604 15:43:19 es_test_data:62] Upload: OK - upload took:    25ms, total docs uploaded:    1000
+[I 150604 15:43:20 es_test_data:62] Upload: OK - upload took:    25ms, total docs uploaded:    2000
+[I 150604 15:43:20 es_test_data:62] Upload: OK - upload took:    19ms, total docs uploaded:    3000
+[I 150604 15:43:20 es_test_data:62] Upload: OK - upload took:    18ms, total docs uploaded:    4000
+[I 150604 15:43:20 es_test_data:62] Upload: OK - upload took:    27ms, total docs uploaded:    5000
+[I 150604 15:43:20 es_test_data:62] Upload: OK - upload took:    19ms, total docs uploaded:    6000
+[I 150604 15:43:20 es_test_data:62] Upload: OK - upload took:    15ms, total docs uploaded:    7000
+[I 150604 15:43:20 es_test_data:62] Upload: OK - upload took:    24ms, total docs uploaded:    8000
+[I 150604 15:43:20 es_test_data:62] Upload: OK - upload took:    32ms, total docs uploaded:    9000
+[I 150604 15:43:20 es_test_data:62] Upload: OK - upload took:    31ms, total docs uploaded:   10000
+[I 150604 15:43:20 es_test_data:216] Done - total docs uploaded: 10000, took 1 seconds
+[I 150604 15:43:20 es_test_data:217] Bulk upload average:           23 ms
+[I 150604 15:43:20 es_test_data:218] Bulk upload median:            24 ms
+[I 150604 15:43:20 es_test_data:219] Bulk upload 95th percentile:   31 ms
 $
 ```
  

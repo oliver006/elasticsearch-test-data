@@ -4,31 +4,32 @@ import logging
 import random
 import string
 import uuid
+import numpy
 
+import tornado.gen
 import tornado.httpclient
 import tornado.options
 
-
-http_client = tornado.httpclient.HTTPClient()
+async_http_client = tornado.httpclient.AsyncHTTPClient()
 id_counter = 0
+batch_upload_took = []
+upload_data_count = 0
 
 
 def delete_index(idx_name):
     try:
         url = "%s/%s?refresh=true" % (tornado.options.options.es_url, idx_name)
         request = tornado.httpclient.HTTPRequest(url, method="DELETE", request_timeout=240)
-        response = http_client.fetch(request)
+        response = tornado.httpclient.HTTPClient().fetch(request)
         logging.info('Deleting index  "%s" done   %s' % (idx_name, response.body))
     except tornado.httpclient.HTTPError:
         pass
 
 
 def create_index(idx_name):
-
     schema = {
         "settings": {
-            "number_of_shards": tornado.options.options.num_of_shards,
-            "number_of_replicas": tornado.options.options.num_of_replicas
+            "number_of_shards": tornado.options.options.num_of_shards, "number_of_replicas": tornado.options.options.num_of_replicas
         },
         "refresh": True
     }
@@ -38,20 +39,25 @@ def create_index(idx_name):
     try:
         logging.info('Trying to create index %s' % (url))
         request = tornado.httpclient.HTTPRequest(url, method="PUT", body=body, request_timeout=240)
-        response = http_client.fetch(request)
+        response = tornado.httpclient.HTTPClient().fetch(request)
         logging.info('Creating index "%s" done   %s' % (idx_name, response.body))
     except tornado.httpclient.HTTPError:
+        logging.info('Guess the index exists already')
         pass
 
 
+@tornado.gen.coroutine
 def upload_batch(upload_data_txt):
 
-    request = tornado.httpclient.HTTPRequest(tornado.options.options.es_url + "/_bulk", method="POST", body=upload_data_txt, request_timeout=240)
-    response = http_client.fetch(request)
-    result = json.loads(response.body)
+    request = tornado.httpclient.HTTPRequest(tornado.options.options.es_url + "/_bulk", method="POST", body=upload_data_txt, request_timeout=3)
+    response = yield async_http_client.fetch(request)
 
+    result = json.loads(response.body)
     res_txt = "OK" if not result['errors'] else "FAILED"
-    return res_txt, result['took']
+    took = int(result['took'])
+    batch_upload_took.append(took)
+
+    logging.info("Upload: %s - upload took: %5dms, total docs uploaded: %7d" % (res_txt, took, upload_data_count))
 
 
 def get_data_for_format(format):
@@ -138,7 +144,10 @@ def set_index_refresh(val):
 _dict_data = None
 
 
+@tornado.gen.coroutine
 def generate_test_data():
+
+    global upload_data_count
 
     if tornado.options.options.force_init_index:
         delete_index(tornado.options.options.index_name)
@@ -167,7 +176,6 @@ def generate_test_data():
 
     ts_start = int(time.time())
     upload_data_txt = ""
-    upload_data_count = 0
     total_uploaded = 0
 
     logging.info("Generating %d docs, upload batch size is %d" % (tornado.options.options.count, tornado.options.options.batch_size))
@@ -178,25 +186,21 @@ def generate_test_data():
         if out_file:
             out_file.write("%s\n" % json.dumps(item))
 
-        cmd = {'index': {'_index': tornado.options.options.index_name,
-                         '_type': tornado.options.options.index_type}}
-        if'_id' in item:
+        cmd = {'index': {'_index': tornado.options.options.index_name, '_type': tornado.options.options.index_type}}
+        if '_id' in item:
             cmd['index']['_id'] = item['_id']
 
         upload_data_txt += json.dumps(cmd) + "\n"
         upload_data_txt += json.dumps(item) + "\n"
         upload_data_count += 1
 
-        if upload_data_count == tornado.options.options.batch_size:
-            res_txt, took = upload_batch(upload_data_txt)
-            total_uploaded += upload_data_count
+        if upload_data_count % tornado.options.options.batch_size == 0:
+            yield upload_batch(upload_data_txt)
             upload_data_txt = ""
-            upload_data_count = 0
-            logging.info("Upload: %s - upload took: %5dms, total docs uploaded: %7d" % (res_txt, took, total_uploaded))
 
     # upload remaining items in `upload_data_txt`
     if upload_data_txt:
-        upload_batch(upload_data_txt)
+        yield upload_batch(upload_data_txt)
 
     if tornado.options.options.set_refresh:
         set_index_refresh("1s")
@@ -205,16 +209,19 @@ def generate_test_data():
         out_file.close()
 
     took_secs = int(time.time() - ts_start)
-    logging.info("Done - total count %d, took %d seconds" % (tornado.options.options.count, took_secs))
+    logging.info("Done - total docs uploaded: %d, took %d seconds" % (tornado.options.options.count, took_secs))
+    logging.info("Bulk upload average:         %4d ms" % int(numpy.mean(batch_upload_took)))
+    logging.info("Bulk upload median:          %4d ms" % int(numpy.percentile(batch_upload_took, 50)))
+    logging.info("Bulk upload 95th percentile: %4d ms" % int(numpy.percentile(batch_upload_took, 95)))
 
 
 if __name__ == '__main__':
     tornado.options.define("es_url", type=str, default='http://localhost:9200/', help="URL of your Elasticsearch node")
     tornado.options.define("index_name", type=str, default='test_data', help="Name of the index to store your messages")
     tornado.options.define("index_type", type=str, default='test_type', help="Type")
-    tornado.options.define("batch_size", type=int, default=500, help="Elasticsearch bulk index batch size")
+    tornado.options.define("batch_size", type=int, default=1000, help="Elasticsearch bulk index batch size")
     tornado.options.define("num_of_shards", type=int, default=2, help="Number of shards for ES index")
-    tornado.options.define("count", type=int, default=1000, help="Number of docs to generate")
+    tornado.options.define("count", type=int, default=10000, help="Number of docs to generate")
     tornado.options.define("format", type=str, default='name:str,age:int,last_updated:ts', help="message format")
     tornado.options.define("num_of_replicas", type=int, default=0, help="Number of replicas for ES index")
     tornado.options.define("force_init_index", type=bool, default=False, help="Force deleting and re-initializing the Elasticsearch index")
