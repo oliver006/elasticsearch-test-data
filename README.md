@@ -14,7 +14,7 @@ It allows for easy configuring of what the test documents look like, what kind o
 
 Let's assume you have an Elasticsearch cluster running. If not, [set it up locally](http://ohardt.us/es-install) and point your browser to [http://localhost:9200](http://localhost:9200) to see if it's up.
 
-Python and [Tornado](https://github.com/tornadoweb/tornado/) are used, run `pip install tornado` to install Tornado if you don't have it already.
+Python and [Tornado](https://github.com/tornadoweb/tornado/) and [NumPy](http://www.numpy.org/) are used, run `pip install tornado numpy` to install Tornado and NumPy if you don't have it already.
 
 #### Lets get started
 
