@@ -71,20 +71,6 @@ def get_data_for_format(format):
     field_name = split_f[0]
     field_type = split_f[1]
 
-    if field_type == "text":
-        text = split_f[2].split("-")
-        min = 1 if len(split_f) < 4 else int(split_f[3])
-        max = min + 1 if len(split_f) < 5 else int(split_f[4])
-        if min == max:
-            count = max
-        else:
-            count = random.randrange(min, max)
-        words = []
-        for _ in range(count):
-            words.append(""+random.choice(text))
-        return_val = " ".join(words)
-
-
     if field_type == "bool":
         return_val = random.choice([True, False])
 
@@ -144,6 +130,20 @@ def get_data_for_format(format):
         else:
             count = random.randrange(min, max)
         return_val = " ".join([random.choice(_dict_data).strip() for _ in range(count)])
+
+
+    if field_type == "text":
+        text = ["text1", "text2", "text3"] if len(splitf) < 3 else split_f[2].split("-")
+        min = 1 if len(split_f) < 4 else int(split_f[3])
+        max = min + 1 if len(split_f) < 5 else int(split_f[4])
+        if min == max:
+            count = max
+        else:
+            count = random.randrange(min, max)
+        words = []
+        for _ in range(count):
+            words.append(""+random.choice(text))
+        return_val = " ".join(words)
 
     return field_name, return_val
 

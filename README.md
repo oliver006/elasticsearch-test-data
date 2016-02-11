@@ -80,10 +80,12 @@ For every document, `es_test_data.py` will generate random values for each of th
 Currently supported field types are:
 
 - `ts` a timestamp (in milliseconds), randomly picked between now +/- 30 days
+- 'ts2' a timestamp in the "%Y-%m-%dT%H:%M:%S.000-0000" format, randomly picked between now +/- 30 days
 - `int:min:max` a random integer between `min` and `max`. If `min and `max` are not provided they default to 0 and 100000
 - `str:min:max` a word ( as in, a string), made up of `min` to `max` random upper/lowercase and digit characters. If `min` and `max` are optional, defaulting to `3` and `10`
 - `words:min:max` a random number of `strs`, separated by space, `min` and `max` are optional, defaulting to '2' and `10`
 - `dict:min:max` a random number of entries from the dictionary file, separated by space, `min` and `max` are optional, defaulting to '2' and `10`
+- 'text:words:min:max' a random number of words seperated by space from a given list of `-` seperated words, the words are optional defaulting to `text1` `text2` and `text3`, min and max are optional, defaulting to `1` and `1`
 
 
 
