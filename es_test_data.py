@@ -133,7 +133,7 @@ def get_data_for_format(format):
 
 
     if field_type == "text":
-        text = ["text1", "text2", "text3"] if len(splitf) < 3 else split_f[2].split("-")
+        text = ["text1", "text2", "text3"] if len(split_f) < 3 else split_f[2].split("-")
         min = 1 if len(split_f) < 4 else int(split_f[3])
         max = min + 1 if len(split_f) < 5 else int(split_f[4])
         if min == max:
