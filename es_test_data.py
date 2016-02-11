@@ -80,7 +80,7 @@ def get_data_for_format(format):
         if min == max:
             length = max
         else:
-            lenght = random.randrange(min, max)
+            length = random.randrange(min, max)
         return_val = "".join([random.choice(string.ascii_letters + string.digits) for x in range(length)])
 
     elif field_type == "int":
