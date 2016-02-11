@@ -70,16 +70,25 @@ def get_data_for_format(format):
     field_name = split_f[0]
     field_type = split_f[1]
 
+    if field_type == "bool":
+        return_val = random.choice([True, False])
+
     if field_type == "str":
         min = 3 if len(split_f) < 3 else int(split_f[2])
         max = min + 7 if len(split_f) < 4 else int(split_f[3])
-        length = random.randrange(min, max)
+        if min == max:
+            length = max
+        else:
+            lenght = random.randrange(min, max)
         return_val = "".join([random.choice(string.ascii_letters + string.digits) for x in range(length)])
 
     elif field_type == "int":
         min = 0 if len(split_f) < 3 else int(split_f[2])
         max = min + 100000 if len(split_f) < 4 else int(split_f[3])
-        return_val = random.randrange(min, max)
+        if min == max:
+            return_val = max
+        else:
+            return_val = random.randrange(min, max)
 
     elif field_type == "ts":
         now = int(time.time())
@@ -91,7 +100,10 @@ def get_data_for_format(format):
     elif field_type == "words":
         min = 2 if len(split_f) < 3 else int(split_f[2])
         max = min + 8 if len(split_f) < 4 else int(split_f[3])
-        count = random.randrange(min, max)
+        if min == max:
+            count = max
+        else:
+            count = random.randrange(min, max)
         words = []
         for _ in range(count):
             word_len = random.randrange(3, 10)
@@ -102,7 +114,10 @@ def get_data_for_format(format):
         global _dict_data
         min = 2 if len(split_f) < 3 else int(split_f[2])
         max = min + 8 if len(split_f) < 4 else int(split_f[3])
-        count = random.randrange(min, max)
+        if min == max:
+            count = max
+        else:
+            count = random.randrange(min, max)
         return_val = " ".join([random.choice(_dict_data).strip() for _ in range(count)])
 
     return field_name, return_val
