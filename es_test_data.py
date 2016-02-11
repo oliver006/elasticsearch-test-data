@@ -7,6 +7,7 @@ import random
 import string
 import uuid
 import numpy
+import datetime
 
 import tornado.gen
 import tornado.httpclient
@@ -70,6 +71,20 @@ def get_data_for_format(format):
     field_name = split_f[0]
     field_type = split_f[1]
 
+    if field_type == "text":
+        text = split_f[2].split("-")
+        min = 1 if len(split_f) < 4 else int(split_f[3])
+        max = min + 1 if len(split_f) < 5 else int(split_f[4])
+        if min == max:
+            count = max
+        else:
+            count = random.randrange(min, max)
+        words = []
+        for _ in range(count):
+            words.append(""+random.choice(text))
+        return_val = " ".join(words)
+
+
     if field_type == "bool":
         return_val = random.choice([True, False])
 
@@ -90,12 +105,22 @@ def get_data_for_format(format):
         else:
             return_val = random.randrange(min, max)
 
+
     elif field_type == "ts":
         now = int(time.time())
         per_day = 24 * 60 * 60
         min = now - 30 * per_day if len(split_f) < 3 else int(split_f[2])
         max = now + 30 * per_day if len(split_f) < 4 else int(split_f[3])
         return_val = int(random.randrange(min, max) * 1000)
+
+
+    elif field_type == "ts2":
+        now = int(time.time())
+        per_day = 24 * 60 * 60
+        min = now - 30 * per_day if len(split_f) < 3 else int(split_f[2])
+        max = now + 30 * per_day if len(split_f) < 4 else int(split_f[3])
+        return_val = datetime.datetime.fromtimestamp(int(random.randrange(min, max))).strftime("%Y-%m-%dT%H:%M:%S.000-0000")
+
 
     elif field_type == "words":
         min = 2 if len(split_f) < 3 else int(split_f[2])
