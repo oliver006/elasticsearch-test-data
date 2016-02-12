@@ -53,18 +53,20 @@ def create_index(idx_name):
 
 @tornado.gen.coroutine
 def upload_batch(upload_data_txt):
-
-    request = tornado.httpclient.HTTPRequest(tornado.options.options.es_url + "/_bulk",
-                                             method="POST",
-                                             body=upload_data_txt,
-                                             request_timeout=tornado.options.options.http_upload_timeout)
-    response = yield async_http_client.fetch(request)
+    try:
+        request = tornado.httpclient.HTTPRequest(tornado.options.options.es_url + "/_bulk",
+                                                 method="POST",
+                                                 body=upload_data_txt,
+                                                 request_timeout=tornado.options.options.http_upload_timeout)
+        response = yield async_http_client.fetch(request)
+    except Exception as ex:
+        logging.error("upload failed, error: %s" % ex)
+        return
 
     result = json.loads(response.body)
     res_txt = "OK" if not result['errors'] else "FAILED"
     took = int(result['took'])
     batch_upload_took.append(took)
-
     logging.info("Upload: %s - upload took: %5dms, total docs uploaded: %7d" % (res_txt, took, upload_data_count))
 
 
@@ -149,7 +151,7 @@ def set_index_refresh(val):
         http_client.fetch(request)
         logging.info('Set index refresh to %s' % val)
     except Exception as ex:
-        print ex
+        logging.exception(ex)
 
 
 @tornado.gen.coroutine
@@ -186,7 +188,8 @@ def generate_test_data():
     upload_data_txt = ""
     total_uploaded = 0
 
-    logging.info("Generating %d docs, upload batch size is %d" % (tornado.options.options.count, tornado.options.options.batch_size))
+    logging.info("Generating %d docs, upload batch size is %d" % (tornado.options.options.count,
+                                                                  tornado.options.options.batch_size))
     for num in range(0, tornado.options.options.count):
 
         item = generate_random_doc(format)
@@ -194,7 +197,8 @@ def generate_test_data():
         if out_file:
             out_file.write("%s\n" % json.dumps(item))
 
-        cmd = {'index': {'_index': tornado.options.options.index_name, '_type': tornado.options.options.index_type}}
+        cmd = {'index': {'_index': tornado.options.options.index_name,
+                         '_type': tornado.options.options.index_type}}
         if '_id' in item:
             cmd['index']['_id'] = item['_id']
 
@@ -217,10 +221,12 @@ def generate_test_data():
         out_file.close()
 
     took_secs = int(time.time() - ts_start)
-    logging.info("Done - total docs uploaded: %d, took %d seconds" % (tornado.options.options.count, took_secs))
-    logging.info("Bulk upload average:         %4d ms" % int(numpy.mean(batch_upload_took)))
-    logging.info("Bulk upload median:          %4d ms" % int(numpy.percentile(batch_upload_took, 50)))
-    logging.info("Bulk upload 95th percentile: %4d ms" % int(numpy.percentile(batch_upload_took, 95)))
+
+    if batch_upload_took:
+        logging.info("Done - total docs uploaded: %d, took %d seconds" % (tornado.options.options.count, took_secs))
+        logging.info("Bulk upload average:         %4d ms" % int(numpy.mean(batch_upload_took)))
+        logging.info("Bulk upload median:          %4d ms" % int(numpy.percentile(batch_upload_took, 50)))
+        logging.info("Bulk upload 95th percentile: %4d ms" % int(numpy.percentile(batch_upload_took, 95)))
 
 
 if __name__ == '__main__':
