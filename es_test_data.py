@@ -10,12 +10,14 @@ import numpy
 
 import tornado.gen
 import tornado.httpclient
+import tornado.ioloop
 import tornado.options
 
 async_http_client = tornado.httpclient.AsyncHTTPClient()
 id_counter = 0
 batch_upload_took = []
 upload_data_count = 0
+_dict_data = None
 
 
 def delete_index(idx_name):
@@ -31,7 +33,8 @@ def delete_index(idx_name):
 def create_index(idx_name):
     schema = {
         "settings": {
-            "number_of_shards": tornado.options.options.num_of_shards, "number_of_replicas": tornado.options.options.num_of_replicas
+            "number_of_shards":   tornado.options.options.num_of_shards,
+            "number_of_replicas": tornado.options.options.num_of_replicas
         },
         "refresh": True
     }
@@ -44,14 +47,17 @@ def create_index(idx_name):
         response = tornado.httpclient.HTTPClient().fetch(request)
         logging.info('Creating index "%s" done   %s' % (idx_name, response.body))
     except tornado.httpclient.HTTPError:
-        logging.info('Guess the index exists already')
+        logging.info('Looks like the index exists already')
         pass
 
 
 @tornado.gen.coroutine
 def upload_batch(upload_data_txt):
 
-    request = tornado.httpclient.HTTPRequest(tornado.options.options.es_url + "/_bulk", method="POST", body=upload_data_txt, request_timeout=3)
+    request = tornado.httpclient.HTTPRequest(tornado.options.options.es_url + "/_bulk",
+                                             method="POST",
+                                             body=upload_data_txt,
+                                             request_timeout=tornado.options.options.http_upload_timeout)
     response = yield async_http_client.fetch(request)
 
     result = json.loads(response.body)
@@ -69,6 +75,8 @@ def get_data_for_format(format):
 
     field_name = split_f[0]
     field_type = split_f[1]
+
+    return_val = ''
 
     if field_type == "str":
         min = 3 if len(split_f) < 3 else int(split_f[2])
@@ -136,14 +144,12 @@ def set_index_refresh(val):
     body = json.dumps(params)
     url = "%s/%s/_settings" % (tornado.options.options.es_url, tornado.options.options.index_name)
     try:
-        request = HTTPRequest(url, method="PUT", body=body, request_timeout=240)
+        request = tornado.httpclient.HTTPRequest(url, method="PUT", body=body, request_timeout=240)
+        http_client = tornado.httpclient.HTTPClient()
         http_client.fetch(request)
         logging.info('Set index refresh to %s' % val)
-    except HTTPError:
-        pass
-
-
-_dict_data = None
+    except Exception as ex:
+        print ex
 
 
 @tornado.gen.coroutine
@@ -223,6 +229,7 @@ if __name__ == '__main__':
     tornado.options.define("index_type", type=str, default='test_type', help="Type")
     tornado.options.define("batch_size", type=int, default=1000, help="Elasticsearch bulk index batch size")
     tornado.options.define("num_of_shards", type=int, default=2, help="Number of shards for ES index")
+    tornado.options.define("http_upload_timeout", type=int, default=3, help="Timeout in seconds when uploading data")
     tornado.options.define("count", type=int, default=10000, help="Number of docs to generate")
     tornado.options.define("format", type=str, default='name:str,age:int,last_updated:ts', help="message format")
     tornado.options.define("num_of_replicas", type=int, default=0, help="Number of replicas for ES index")
@@ -231,7 +238,6 @@ if __name__ == '__main__':
     tornado.options.define("out_file", type=str, default=False, help="If set, write test data to out_file as well.")
     tornado.options.define("id_type", type=str, default=None, help="Type of 'id' to use for the docs, valid settings are int and uuid4, None is default")
     tornado.options.define("dict_file", type=str, default=None, help="Name of dictionary file to use")
-
     tornado.options.parse_command_line()
 
     tornado.ioloop.IOLoop.instance().run_sync(generate_test_data)
