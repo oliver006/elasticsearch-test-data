@@ -7,6 +7,7 @@ import random
 import string
 import uuid
 import numpy
+import datetime
 
 import tornado.gen
 import tornado.httpclient
@@ -18,6 +19,7 @@ id_counter = 0
 batch_upload_took = []
 upload_data_count = 0
 _dict_data = None
+
 
 
 def delete_index(idx_name):
@@ -80,28 +82,32 @@ def get_data_for_format(format):
 
     return_val = ''
 
-    if field_type == "str":
+    if field_type == "bool":
+        return_val = random.choice([True, False])
+
+    elif field_type == "str":
         min = 3 if len(split_f) < 3 else int(split_f[2])
         max = min + 7 if len(split_f) < 4 else int(split_f[3])
-        length = random.randrange(min, max)
+        length = generate_count(min, max)
         return_val = "".join([random.choice(string.ascii_letters + string.digits) for x in range(length)])
 
     elif field_type == "int":
         min = 0 if len(split_f) < 3 else int(split_f[2])
         max = min + 100000 if len(split_f) < 4 else int(split_f[3])
-        return_val = random.randrange(min, max)
+        return_val = generate_count(min, max)
 
-    elif field_type == "ts":
+    elif field_type in ["ts", "tstxt"]:
         now = int(time.time())
         per_day = 24 * 60 * 60
         min = now - 30 * per_day if len(split_f) < 3 else int(split_f[2])
         max = now + 30 * per_day if len(split_f) < 4 else int(split_f[3])
-        return_val = int(random.randrange(min, max) * 1000)
+        ts = generate_count(min, max)
+        return_val = int(ts * 1000) if field_type == "ts" else datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%dT%H:%M:%S.000-0000")
 
     elif field_type == "words":
         min = 2 if len(split_f) < 3 else int(split_f[2])
         max = min + 8 if len(split_f) < 4 else int(split_f[3])
-        count = random.randrange(min, max)
+        count = generate_count(min, max)
         words = []
         for _ in range(count):
             word_len = random.randrange(3, 10)
@@ -112,10 +118,29 @@ def get_data_for_format(format):
         global _dict_data
         min = 2 if len(split_f) < 3 else int(split_f[2])
         max = min + 8 if len(split_f) < 4 else int(split_f[3])
-        count = random.randrange(min, max)
+        count = generate_count(min, max)
         return_val = " ".join([random.choice(_dict_data).strip() for _ in range(count)])
 
+    elif field_type == "text":
+        text = ["text1", "text2", "text3"] if len(split_f) < 3 else split_f[2].split("-")
+        min = 1 if len(split_f) < 4 else int(split_f[3])
+        max = min + 1 if len(split_f) < 5 else int(split_f[4])
+        count = generate_count(min, max)
+        words = []
+        for _ in range(count):
+            words.append(""+random.choice(text))
+        return_val = " ".join(words)
+
     return field_name, return_val
+
+
+def generate_count(min, max):
+    if min == max:
+        return max
+    elif min > max:
+        return random.randrange(max, min);
+    else:
+        return random.randrange(min, max);
 
 
 def generate_random_doc(format):
