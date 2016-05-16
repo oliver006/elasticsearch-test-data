@@ -6,7 +6,6 @@ import logging
 import random
 import string
 import uuid
-import numpy
 import datetime
 
 import tornado.gen
@@ -16,7 +15,6 @@ import tornado.options
 
 async_http_client = tornado.httpclient.AsyncHTTPClient()
 id_counter = 0
-batch_upload_took = []
 upload_data_count = 0
 _dict_data = None
 
@@ -65,10 +63,9 @@ def upload_batch(upload_data_txt):
         logging.error("upload failed, error: %s" % ex)
         return
 
-    result = json.loads(response.body)
+    result = json.loads(response.body.decode('utf-8'))
     res_txt = "OK" if not result['errors'] else "FAILED"
     took = int(result['took'])
-    batch_upload_took.append(took)
     logging.info("Upload: %s - upload took: %5dms, total docs uploaded: %7d" % (res_txt, took, upload_data_count))
 
 
@@ -247,11 +244,7 @@ def generate_test_data():
 
     took_secs = int(time.time() - ts_start)
 
-    if batch_upload_took:
-        logging.info("Done - total docs uploaded: %d, took %d seconds" % (tornado.options.options.count, took_secs))
-        logging.info("Bulk upload average:         %4d ms" % int(numpy.mean(batch_upload_took)))
-        logging.info("Bulk upload median:          %4d ms" % int(numpy.percentile(batch_upload_took, 50)))
-        logging.info("Bulk upload 95th percentile: %4d ms" % int(numpy.percentile(batch_upload_took, 95)))
+    logging.info("Done - total docs uploaded: %d, took %d seconds" % (tornado.options.options.count, took_secs))
 
 
 if __name__ == '__main__':
@@ -261,7 +254,7 @@ if __name__ == '__main__':
     tornado.options.define("batch_size", type=int, default=1000, help="Elasticsearch bulk index batch size")
     tornado.options.define("num_of_shards", type=int, default=2, help="Number of shards for ES index")
     tornado.options.define("http_upload_timeout", type=int, default=3, help="Timeout in seconds when uploading data")
-    tornado.options.define("count", type=int, default=10000, help="Number of docs to generate")
+    tornado.options.define("count", type=int, default=100000, help="Number of docs to generate")
     tornado.options.define("format", type=str, default='name:str,age:int,last_updated:ts', help="message format")
     tornado.options.define("num_of_replicas", type=int, default=0, help="Number of replicas for ES index")
     tornado.options.define("force_init_index", type=bool, default=False, help="Force deleting and re-initializing the Elasticsearch index")
