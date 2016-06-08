@@ -23,7 +23,7 @@ _dict_data = None
 def delete_index(idx_name):
     try:
         url = "%s/%s?refresh=true" % (tornado.options.options.es_url, idx_name)
-        request = tornado.httpclient.HTTPRequest(url, method="DELETE", request_timeout=240)
+        request = tornado.httpclient.HTTPRequest(url, method="DELETE", request_timeout=240, auth_username=tornado.options.options.username, auth_password=tornado.options.options.password)
         response = tornado.httpclient.HTTPClient().fetch(request)
         logging.info('Deleting index  "%s" done   %s' % (idx_name, response.body))
     except tornado.httpclient.HTTPError:
@@ -43,7 +43,7 @@ def create_index(idx_name):
     url = "%s/%s" % (tornado.options.options.es_url, idx_name)
     try:
         logging.info('Trying to create index %s' % (url))
-        request = tornado.httpclient.HTTPRequest(url, method="PUT", body=body, request_timeout=240)
+        request = tornado.httpclient.HTTPRequest(url, method="PUT", body=body, request_timeout=240, auth_username=tornado.options.options.username, auth_password=tornado.options.options.password)
         response = tornado.httpclient.HTTPClient().fetch(request)
         logging.info('Creating index "%s" done   %s' % (idx_name, response.body))
     except tornado.httpclient.HTTPError:
@@ -57,7 +57,8 @@ def upload_batch(upload_data_txt):
         request = tornado.httpclient.HTTPRequest(tornado.options.options.es_url + "/_bulk",
                                                  method="POST",
                                                  body=upload_data_txt,
-                                                 request_timeout=tornado.options.options.http_upload_timeout)
+                                                 request_timeout=tornado.options.options.http_upload_timeout,
+                                                 auth_username=tornado.options.options.username, auth_password=tornado.options.options.password)
         response = yield async_http_client.fetch(request)
     except Exception as ex:
         logging.error("upload failed, error: %s" % ex)
@@ -168,7 +169,7 @@ def set_index_refresh(val):
     body = json.dumps(params)
     url = "%s/%s/_settings" % (tornado.options.options.es_url, tornado.options.options.index_name)
     try:
-        request = tornado.httpclient.HTTPRequest(url, method="PUT", body=body, request_timeout=240)
+        request = tornado.httpclient.HTTPRequest(url, method="PUT", body=body, request_timeout=240, auth_username=tornado.options.options.username, auth_password=tornado.options.options.password)
         http_client = tornado.httpclient.HTTPClient()
         http_client.fetch(request)
         logging.info('Set index refresh to %s' % val)
@@ -262,6 +263,8 @@ if __name__ == '__main__':
     tornado.options.define("out_file", type=str, default=False, help="If set, write test data to out_file as well.")
     tornado.options.define("id_type", type=str, default=None, help="Type of 'id' to use for the docs, valid settings are int and uuid4, None is default")
     tornado.options.define("dict_file", type=str, default=None, help="Name of dictionary file to use")
+    tornado.options.define("username", type=str, default=None, help="Username for elasticsearch")
+    tornado.options.define("password", type=str, default=None, help="Password for elasticsearch")
     tornado.options.parse_command_line()
 
     tornado.ioloop.IOLoop.instance().run_sync(generate_test_data)
