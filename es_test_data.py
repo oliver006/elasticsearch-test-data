@@ -93,6 +93,9 @@ def get_data_for_format(format):
         min = 0 if len(split_f) < 3 else int(split_f[2])
         max = min + 100000 if len(split_f) < 4 else int(split_f[3])
         return_val = generate_count(min, max)
+    
+    elif field_type == "ipv4":
+        return_val = "{0}.{1}.{2}.{3}".format(generate_count(0, 245),generate_count(0, 245),generate_count(0, 245),generate_count(0, 245))
 
     elif field_type in ["ts", "tstxt"]:
         now = int(time.time())
