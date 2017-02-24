@@ -81,6 +81,7 @@ Currently supported field types are:
 
 - `bool` returns a random true or false
 - `ts` a timestamp (in milliseconds), randomly picked between now +/- 30 days
+- `ipv4` returns a random ipv4
 - `tstxt` a timestamp in the "%Y-%m-%dT%H:%M:%S.000-0000" format, randomly picked between now +/- 30 days
 - `int:min:max` a random integer between `min` and `max`. If `min and `max` are not provided they default to 0 and 100000
 - `str:min:max` a word ( as in, a string), made up of `min` to `max` random upper/lowercase and digit characters. If `min` and `max` are optional, defaulting to `3` and `10`
