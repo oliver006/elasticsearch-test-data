@@ -132,6 +132,14 @@ def get_data_for_format(format):
             words.append(""+random.choice(text))
         return_val = " ".join(words)
 
+    elif field_type == "list":
+        return_val = []
+        list = split_f[2].split("-")
+        list_len = len(list)
+        actual_len = random.randrange(0, list_len)
+        for i in range(0,actual_len - 1,1):
+            return_val += list[i]
+        
     return field_name, return_val
 
 
