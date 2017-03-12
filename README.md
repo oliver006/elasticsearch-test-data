@@ -88,7 +88,7 @@ Currently supported field types are:
 - `words:min:max` a random number of `strs`, separated by space, `min` and `max` are optional, defaulting to '2' and `10`
 - `dict:min:max` a random number of entries from the dictionary file, separated by space, `min` and `max` are optional, defaulting to '2' and `10`
 - `text:words:min:max` a random number of words seperated by space from a given list of `-` seperated words, the words are optional defaulting to `text1` `text2` and `text3`, min and max are optional, defaulting to `1` and `1`
-
+- 'list:words' a random number of words generated as elastic search array field (multi valued field) from a given list of `-` seperated words. example: list:first-second-third will generate arrays of 0 or 3 items into the field.
 
 
 ## todo
