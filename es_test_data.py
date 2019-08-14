@@ -218,7 +218,7 @@ def generate_test_data():
 
     logging.info("Generating %d docs, upload batch size is %d" % (tornado.options.options.count,
                                                                   tornado.options.options.batch_size))
-    for num in range(0, tornado.options.options.count):
+    for num in xrange(0, tornado.options.options.count):
 
         item = generate_random_doc(format)
 
