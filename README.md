@@ -58,6 +58,8 @@ to an Elasticsearch cluster at `http://localhost:9200` to an index called `test_
 `python es_test_data.py --help` gives you the full set of command line options, here are the most important ones:
 
 - `--es_url=http://localhost:9200` the base URL of your ES node, don't include the index name
+- `--username=<username>` the username when basic auth is required
+- `--password=<password>` the password when basic auth is required
 - `--count=###` number of documents to generate and upload
 - `--index_name=test_data` the name of the index to upload the data to. If it doesn't exist it'll be created with these options
   - `--num_of_shards=2` the number of shards for the index
