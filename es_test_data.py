@@ -220,7 +220,6 @@ def generate_test_data():
 
     ts_start = int(time.time())
     upload_data_txt = ""
-    total_uploaded = 0
 
     logging.info("Generating %d docs, upload batch size is %d" % (tornado.options.options.count,
                                                                   tornado.options.options.batch_size))
