@@ -13,12 +13,12 @@ kind of data types they include and what the field names are called.
 
 ## Cool, how do I use this? 
 
+### Run Python script
+
 Let's assume you have an Elasticsearch cluster running.
 
 Python and [Tornado](https://github.com/tornadoweb/tornado/) are used. Run
 `pip install tornado` to install Tornado if you don't have it already.
-
-## Lets get started
 
 It's as simple as this:
 
@@ -55,6 +55,36 @@ of the format
 ```
 to an Elasticsearch cluster at `http://localhost:9200` to an index called
 `test_data`.
+
+### Docker and Docker Compose
+
+Requires [Docker](https://docs.docker.com/get-docker/) for running the app and [Docker Compose](https://docs.docker.com/compose/install/) for running a single ElasticSearch domain with two nodes (es1 and es2).
+
+1. Set the maximum virutal memory of your machine to `262144` otherwise the ElasticSearch instances will crash, [see the docs](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html)
+    ```bash
+    $ sudo sysctl -w vm.max_map_count=262144
+    ```
+1. Clone this repository
+    ```bash
+    $ git clone https://github.com/oliver006/elasticsearch-test-data.git
+    $ cd elasticsearch-test-data
+    ```
+1. Run the ElasticSearch stack
+    ```bash
+    $ docker-compose up --detached
+    ```
+1. Run the app and inject random data to the ES stack
+    ```bash
+    $ docker run --rm -it --network host unfor19/es-test-data  \
+        --es_url=http://localhost:9200  \
+        --batch_size=10000  \
+        --username=elastic \
+        --password="esbackup-password"
+    ```
+1. Cleanup
+    ```bash
+    $ docker-compose down --volumes
+    ```
 
 ## Not bad but what can I configure?
 
