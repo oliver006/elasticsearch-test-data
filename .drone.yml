@@ -31,3 +31,48 @@ steps:
       event:
         - pull_request
         - push
+
+
+  - name: test-docker-build
+    image: plugins/docker
+    settings:
+      tags: "test"
+      dockerfile: Dockerfile
+      repo: oliver006/es-test-data
+      dry_run: true
+      build_args:
+        - 'TAG=test'
+        - 'SHA1=${DRONE_COMMIT_SHA}'
+        - 'GOARCH=amd64'
+      username:
+        from_secret: docker_user
+      password:
+        from_secret: docker_pass
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
+
+
+  - name: release-docker-image
+    image: plugins/docker
+    settings:
+      tags: "latest"
+      dockerfile: Dockerfile
+      repo: oliver006/es-test-data
+      build_args:
+        - 'TAG=${DRONE_TAG}'
+        - 'SHA1=${DRONE_COMMIT_SHA}'
+        - 'GOARCH=amd64'
+      username:
+        from_secret: docker_user
+      password:
+        from_secret: docker_pass
+    when:
+      event:
+        - push
+      branch:
+        - master
+
+
