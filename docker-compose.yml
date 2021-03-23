@@ -1,0 +1,74 @@
+version: "3.7"
+
+### ------------------------------------------------------------------
+### Variables
+### ------------------------------------------------------------------
+x-variables:
+  exposed-port: &exposed-port 9200
+  es-base: &es-base
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.1
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - elastic
+  data-path: &data-path /usr/share/elasticsearch/data      
+  snapshots-repository-path: &snapshots-repository-path /usr/share/elasticsearch/backup
+  volume-snapshots-repository: &volume-snapshots-repository 
+    - type: volume
+      source: snapshots-repository
+      target: *snapshots-repository-path  
+  services-es-env: &es-env-base
+    "cluster.name": "es-docker-cluster"
+    "cluster.initial_master_nodes": "es01,es02"
+    "bootstrap.memory_lock": "true"
+    "ES_JAVA_OPTS": "-Xms512m -Xmx512m"
+    "ELASTIC_PASSWORD": "esbackup-password"
+    "xpack.security.enabled": "true"
+    "path.repo": *snapshots-repository-path
+### ------------------------------------------------------------------
+
+services:
+  es01: # master
+    <<: *es-base
+    container_name: es01
+    environment:
+      <<: *es-env-base
+      node.name: es01
+      discovery.seed_hosts: es02
+    volumes:
+      - <<: *volume-snapshots-repository 
+      - type: volume
+        source: data01
+        target: *data-path
+    ports:
+      - published: *exposed-port
+        target: 9200
+        protocol: tcp
+        mode: host
+
+  es02:
+    <<: *es-base
+    container_name: es02
+    environment:
+      <<: *es-env-base
+      node.name: es02
+      discovery.seed_hosts: es01
+    volumes:
+      - <<: *volume-snapshots-repository 
+      - type: volume
+        source: data02
+        target: *data-path
+
+volumes:
+  data01:
+    driver: local
+  data02:
+    driver: local
+  snapshots-repository:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge
