@@ -60,7 +60,7 @@ to an Elasticsearch cluster at `http://localhost:9200` to an index called
 
 Requires [Docker](https://docs.docker.com/get-docker/) for running the app and [Docker Compose](https://docs.docker.com/compose/install/) for running a single ElasticSearch domain with two nodes (es1 and es2).
 
-1. Set the maximum virutal memory of your machine to `262144` otherwise the ElasticSearch instances will crash, [see the docs](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html)
+1. Set the maximum virtual memory of your machine to `262144` otherwise the ElasticSearch instances will crash, [see the docs](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html)
     ```bash
     $ sudo sysctl -w vm.max_map_count=262144
     ```
@@ -75,7 +75,7 @@ Requires [Docker](https://docs.docker.com/get-docker/) for running the app and [
     ```
 1. Run the app and inject random data to the ES stack
     ```bash
-    $ docker run --rm -it --network host unfor19/es-test-data  \
+    $ docker run --rm -it --network host oliver006/es-test-data  \
         --es_url=http://localhost:9200  \
         --batch_size=10000  \
         --username=elastic \
