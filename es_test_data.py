@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+import nest_asyncio
+nest_asyncio.apply()
+
 import json
 import time
 import logging
