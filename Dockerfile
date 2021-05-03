@@ -5,8 +5,6 @@
 ARG DEBIAN_VERSION="buster"
 ARG ALPINE_VERSION="3.12"
 ARG PYTHON_VERSION="3.9.1"
-ARG APP_NAME="tornado"
-ARG APP_VERSION="4.5.3"
 ARG APP_PYTHON_USERBASE="/app"
 ARG APP_USER_NAME="appuser"
 ARG APP_USER_ID="1000"
@@ -22,8 +20,6 @@ ARG APP_GROUP_ID="1000"
 FROM python:"$PYTHON_VERSION"-slim-"${DEBIAN_VERSION}" as build
 
 ARG APP_PYTHON_USERBASE
-ARG APP_VERSION
-ARG APP_NAME
 
 # Define env vars
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -38,7 +34,8 @@ RUN pip install --upgrade pip && \
 WORKDIR "$APP_PYTHON_USERBASE"
 
 # Install the app
-RUN pip install --ignore-installed --no-warn-script-location --prefix="/dist" "$APP_NAME"=="$APP_VERSION"
+COPY requirements.txt .
+RUN pip install --ignore-installed --no-warn-script-location --prefix="/dist" -r requirements.txt
 
 WORKDIR /dist/
 
@@ -65,7 +62,6 @@ ARG APP_GROUP_NAME
 # Define env vars
 ENV HOME="$APP_PYTHON_USERBASE" \
     PYTHONUSERBASE="$APP_PYTHON_USERBASE" \
-    APP_NAME="$APP_NAME" \
     PYTHONUNBUFFERED=0
 ENV PATH="${PYTHONUSERBASE}/bin:${PATH}"
 
@@ -81,9 +77,6 @@ USER "$APP_USER_NAME"
 
 # Copy artifacts from Build Stage
 COPY --from=build --chown="$APP_USER_NAME":"$APP_GROUP_ID" /dist/ "$PYTHONUSERBASE"/
-
-# The container runs the application, or any other supplied command, such as "bash" or "echo hello"
-# CMD python -m ${APP_NAME}
 
 # Use ENTRYPOINT instead CMD to force the container to start the application
 ENTRYPOINT ["python", "es_test_data.py"]
