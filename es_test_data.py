@@ -4,6 +4,7 @@ import nest_asyncio
 nest_asyncio.apply()
 
 import json
+import csv
 import time
 import logging
 import random
@@ -191,6 +192,18 @@ def set_index_refresh(val):
         logging.exception(ex)
 
 
+def csv_file_to_json(csvFilePath):
+    data = []
+
+    # Open a csv reader called DictReader
+    with open(csvFilePath, encoding='utf-8') as csvf:
+        csvReader = csv.DictReader(csvf)
+        for rows in csvReader:
+            data.append(rows)
+
+    return json.dumps(data)
+
+
 @tornado.gen.coroutine
 def generate_test_data():
 
@@ -224,31 +237,52 @@ def generate_test_data():
     ts_start = int(time.time())
     upload_data_txt = ""
 
-    logging.info("Generating %d docs, upload batch size is %d" % (tornado.options.options.count,
-                                                                  tornado.options.options.batch_size))
-    for num in range(0, tornado.options.options.count):
+    if tornado.options.options.data_file:
+        json_array = ""
+        if tornado.options.options.data_file.endswith(".csv"):
+            json_array = json.loads(csv_file_to_json(tornado.options.options.data_file))
+        else:
+            with open(tornado.options.options.data_file, 'r') as f:
+                json_array = json.load(f)
+            logging.info("Loaded documents from the %s", tornado.options.options.data_file)
 
-        item = generate_random_doc(format)
+        for item in json_array:
+            cmd = {'index': {'_index': tornado.options.options.index_name,
+                             '_type': tornado.options.options.index_type}}
+            if '_id' in item:
+                cmd['index']['_id'] = item['_id']
 
-        if out_file:
-            out_file.write("%s\n" % json.dumps(item))
+            upload_data_txt += json.dumps(cmd) + "\n"
+            upload_data_txt += json.dumps(item) + "\n"
 
-        cmd = {'index': {'_index': tornado.options.options.index_name,
-                         '_type': tornado.options.options.index_type}}
-        if '_id' in item:
-            cmd['index']['_id'] = item['_id']
-
-        upload_data_txt += json.dumps(cmd) + "\n"
-        upload_data_txt += json.dumps(item) + "\n"
-        upload_data_count += 1
-
-        if upload_data_count % tornado.options.options.batch_size == 0:
+        if upload_data_txt:
             yield upload_batch(upload_data_txt)
-            upload_data_txt = ""
+    else:
+        logging.info("Generating %d docs, upload batch size is %d" % (tornado.options.options.count,
+                                                                      tornado.options.options.batch_size))
+        for num in range(0, tornado.options.options.count):
 
-    # upload remaining items in `upload_data_txt`
-    if upload_data_txt:
-        yield upload_batch(upload_data_txt)
+            item = generate_random_doc(format)
+
+            if out_file:
+                out_file.write("%s\n" % json.dumps(item))
+
+            cmd = {'index': {'_index': tornado.options.options.index_name,
+                             '_type': tornado.options.options.index_type}}
+            if '_id' in item:
+                cmd['index']['_id'] = item['_id']
+
+            upload_data_txt += json.dumps(cmd) + "\n"
+            upload_data_txt += json.dumps(item) + "\n"
+            upload_data_count += 1
+
+            if upload_data_count % tornado.options.options.batch_size == 0:
+                yield upload_batch(upload_data_txt)
+                upload_data_txt = ""
+
+            # upload remaining items in `upload_data_txt`
+            if upload_data_txt:
+                yield upload_batch(upload_data_txt)
 
     if tornado.options.options.set_refresh:
         set_index_refresh("1s")
@@ -276,6 +310,7 @@ if __name__ == '__main__':
     tornado.options.define("out_file", type=str, default=False, help="If set, write test data to out_file as well.")
     tornado.options.define("id_type", type=str, default=None, help="Type of 'id' to use for the docs, valid settings are int and uuid4, None is default")
     tornado.options.define("dict_file", type=str, default=None, help="Name of dictionary file to use")
+    tornado.options.define("data_file", type=str, default=None, help="Name of the documents file to use")
     tornado.options.define("username", type=str, default=None, help="Username for elasticsearch")
     tornado.options.define("password", type=str, default=None, help="Password for elasticsearch")
     tornado.options.define("validate_cert", type=bool, default=True, help="SSL validate_cert for requests. Use false for self-signed certificates.")

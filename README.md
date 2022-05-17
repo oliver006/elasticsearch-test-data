@@ -106,6 +106,7 @@ ptions, here are the most important ones:
 - `--dict_file=filename.dic` if provided the `dict` data type will use words
   from the dictionary file, format is one word per line. The entire file is
   loaded at start-up so be careful with (very) large files.
+- `--data_file=filename.json|filename.csv` 
 
 ## What about the document format?
 
