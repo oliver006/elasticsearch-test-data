@@ -106,7 +106,7 @@ ptions, here are the most important ones:
 - `--dict_file=filename.dic` if provided the `dict` data type will use words
   from the dictionary file, format is one word per line. The entire file is
   loaded at start-up so be careful with (very) large files.
-- `--data_file=filename.json|filename.csv` 
+- `--data_file=filename.json|filename.csv` if provided all data in the filename will be inserted into es. The file content has to be an array of json objects (the documents). If the file ends in `.csv` then the data is automatically converted into json and inserted as documents.
 
 ## What about the document format?
 
