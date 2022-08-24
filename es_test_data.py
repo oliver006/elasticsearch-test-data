@@ -280,9 +280,9 @@ def generate_test_data():
                 yield upload_batch(upload_data_txt)
                 upload_data_txt = ""
 
-            # upload remaining items in `upload_data_txt`
-            if upload_data_txt:
-                yield upload_batch(upload_data_txt)
+        # upload remaining items in `upload_data_txt`
+        if upload_data_txt:
+            yield upload_batch(upload_data_txt)
 
     if tornado.options.options.set_refresh:
         set_index_refresh("1s")
