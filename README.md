@@ -142,6 +142,12 @@ Currently supported field types are:
   given list of `-` seperated words, the words are optional defaulting to
   `text1` `text2` and `text3`, min and max are optional, defaulting to `1`
   and `1`
+- `arr:[array_length_expression]:[single_element_format]` an array of entries 
+  with format specified by `single_element_format`. `array_length_expression` 
+  can be either a single number, or pair of numbers separated by `-` (i.e. 3-7), 
+  defining range of lengths from with random length will be picked for each array
+  (Example `int_array:arr:1-5:int:1:250`)
+
 
 ## Todo
 
