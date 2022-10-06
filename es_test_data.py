@@ -92,7 +92,21 @@ def get_data_for_format(format):
 
     return_val = ''
 
-    if field_type == "bool":
+    if field_type == 'arr':
+        return_val = []
+        array_len_expr = split_f[2]
+        if '-' in array_len_expr:
+            (min,max) = array_len_expr.split('-')
+            array_len = generate_count(int(min), int(max))
+        else:
+            array_len = int(array_len_expr)
+
+        single_elem_format = field_name + ':' + format[len(field_name) + len(field_type) + len(array_len_expr) + 3 : ]
+        for i in range(array_len):
+            x = get_data_for_format(single_elem_format)
+            return_val.append(x[1])
+
+    elif field_type == "bool":
         return_val = random.choice([True, False])
 
     elif field_type == "str":
