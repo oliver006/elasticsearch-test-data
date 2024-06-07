@@ -20,7 +20,7 @@ services:
 
 steps:
   - name: tests
-    image: "python:3.7"
+    image: "python:3.12"
     pull: always
     commands:
       - pip3 install -r requirements.txt
