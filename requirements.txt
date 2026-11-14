@@ -1,2 +1,2 @@
-tornado==6.6
+tornado==6.6.1
 nest-asyncio==1.5.1
